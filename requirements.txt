@@ -1,0 +1,14 @@
+streamlit
+pandas
+mysql-connector-python
+plotly
+google-generativeai
+python-dotenv
+toml
+Flask
+Flask-SQLAlchemy
+psycopg2-binary
+Flask-Login
+Flask-WTF
+Werkzeug
+requests
