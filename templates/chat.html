@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Chat IA{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-robot"></i> Asistente de Inventario IA
+                    </h4>
+                    <small>Pregunta sobre productos, stock, precios y más</small>
+                </div>
+                
+                <div class="card-body p-0">
+                    <!-- Contenedor del chat -->
+                    <div id="chat-container" class="p-3" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;">
+                        <div class="text-center text-muted">
+                            <p><i class="fas fa-comments fa-2x mb-2"></i></p>
+                            <p>¡Hola! Soy tu asistente de inventario. Puedes preguntarme sobre:</p>
+                            <ul class="list-unstyled">
+                                <li>• Stock de productos</li>
+                                <li>• Precios</li>
+                                <li>• Información general</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Indicador de escritura -->
+                    <div id="typing-indicator" class="px-3 py-2" style="display: none;">
+                        <div class="d-flex align-items-center text-muted">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Escribiendo...</span>
+                            </div>
+                            <small>El asistente está escribiendo...</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-white">
+                    <!-- Botones de preguntas sugeridas -->
+                    <div class="mb-3">
+                        <small class="text-muted">Preguntas sugeridas:</small>
+                        <div class="mt-2">
+                            <button class="btn btn-outline-primary btn-sm me-2 mb-1 suggestion-btn"
+                                    data-message="¿Cuál es el stock de todos los productos?">
+                                Stock general
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm me-2 mb-1 suggestion-btn"
+                                    data-message="¿Cuáles son los precios de los productos?">
+                                Ver precios
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm me-2 mb-1 suggestion-btn"
+                                    data-message="¿Qué productos están agotados?">
+                                Productos agotados
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Formulario de mensaje -->
+                    <form id="chat-form">
+                        <div class="input-group">
+                            <input type="text" 
+                                   id="message-input" 
+                                   class="form-control" 
+                                   placeholder="Escribe tu pregunta sobre el inventario..."
+                                   autocomplete="off">
+                            <button type="submit" class="btn btn-primary" id="send-btn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Información adicional -->
+            <div class="mt-4">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Funciones disponibles:</h6>
+                    <ul class="mb-0">
+                        <li>Consulta de stock por producto específico</li>
+                        <li>Información de precios</li>
+                        <li>Listado completo de productos</li>
+                        <li>Estados de inventario</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const chatContainer = document.getElementById('chat-container');
+    const typingIndicator = document.getElementById('typing-indicator');
+    const sendBtn = document.getElementById('send-btn');
+    const suggestionBtns = document.querySelectorAll('.suggestion-btn');
+    
+    // Agregar evento a botones de sugerencias
+    suggestionBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const message = this.getAttribute('data-message');
+            messageInput.value = message;
+            chatForm.dispatchEvent(new Event('submit'));
+        });
+    });
+    
+    // Función para agregar mensaje al chat
+    function addMessage(content, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `d-flex ${isUser ? 'justify-content-end' : 'justify-content-start'} mb-3`;
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = `px-3 py-2 rounded ${isUser ? 'bg-primary text-white' : 'bg-white border'}`;
+        messageContent.style.maxWidth = '80%';
+        
+        if (isUser) {
+            messageContent.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div>${content}</div>
+                    <i class="fas fa-user ms-2"></i>
+                </div>
+            `;
+        } else {
+            // Formatear el contenido del bot
+            const formattedContent = content.replace(/\n/g, '<br>');
+            messageContent.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-robot me-2 mt-1 text-primary"></i>
+                    <div>${formattedContent}</div>
+                </div>
+            `;
+        }
+        
+        messageDiv.appendChild(messageContent);
+        chatContainer.appendChild(messageDiv);
+        
+        // Scroll hacia abajo
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+    
+    // Función para mostrar/ocultar indicador de escritura
+    function showTyping(show = true) {
+        typingIndicator.style.display = show ? 'block' : 'none';
+        if (show) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    }
+    
+    // Manejar envío del formulario
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const message = messageInput.value.trim();
+        if (!message) return;
+        
+        // Deshabilitar entrada
+        messageInput.disabled = true;
+        sendBtn.disabled = true;
+        
+        // Agregar mensaje del usuario
+        addMessage(message, true);
+        messageInput.value = '';
+        
+        // Mostrar indicador de escritura
+        showTyping(true);
+        
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message })
+            });
+            
+            const data = await response.json();
+            
+            // Ocultar indicador de escritura
+            showTyping(false);
+            
+            if (response.ok) {
+                addMessage(data.reply);
+            } else {
+                addMessage('Lo siento, hubo un error al procesar tu mensaje. Por favor, inténtalo de nuevo.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showTyping(false);
+            addMessage('Error de conexión. Por favor, verifica tu conexión a internet.');
+        }
+        
+        // Rehabilitar entrada
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+        messageInput.focus();
+    });
+    
+    // Focus en el input al cargar
+    messageInput.focus();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-chart-bar"></i> Dashboard de Inventario</h2>
+                <div>
+                    <a href="{{ url_for('chat') }}" class="btn btn-primary">
+                        <i class="fas fa-robot"></i> Ir al Chat IA
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Información sobre Streamlit -->
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle"></i> Dashboard Avanzado</h5>
+                <p>Para acceder al dashboard completo con visualizaciones interactivas y estadísticas detalladas, ejecuta la aplicación Streamlit:</p>
+                <div class="bg-dark text-light p-3 rounded mb-3">
+                    <code>streamlit run streamlit_db.py</code>
+                </div>
+                <p class="mb-0">
+                    <strong>Características del Dashboard Streamlit:</strong>
+                    <br>• Visualizaciones interactivas con Plotly
+                    <br>• Métricas en tiempo real
+                    <br>• Filtros por categoría
+                    <br>• Gráficos de stock y movimientos
+                    <br>• Chat integrado con IA
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cards de información rápida -->
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Productos</h6>
+                            <h3 id="total-products">-</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-boxes fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">En Stock</h6>
+                            <h3 id="in-stock">-</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Stock Bajo</h6>
+                            <h3 id="low-stock">-</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Agotados</h6>
+                            <h3 id="out-of-stock">-</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabla de productos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-list"></i> Lista de Productos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table">
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <div class="spinner-border" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar datos de productos
+    loadProducts();
+    
+    async function loadProducts() {
+        try {
+            const response = await fetch('/api/products');
+            const products = await response.json();
+            
+            // Actualizar métricas
+            updateMetrics(products);
+            
+            // Actualizar tabla
+            updateProductsTable(products);
+            
+        } catch (error) {
+            console.error('Error al cargar productos:', error);
+            document.getElementById('products-table').innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger">
+                        Error al cargar los productos
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    function updateMetrics(products) {
+        const total = products.length;
+        const inStock = products.filter(p => p.stock > 10).length;
+        const lowStock = products.filter(p => p.stock > 0 && p.stock <= 10).length;
+        const outOfStock = products.filter(p => p.stock === 0).length;
+        
+        document.getElementById('total-products').textContent = total;
+        document.getElementById('in-stock').textContent = inStock;
+        document.getElementById('low-stock').textContent = lowStock;
+        document.getElementById('out-of-stock').textContent = outOfStock;
+    }
+    
+    function updateProductsTable(products) {
+        const tbody = document.getElementById('products-table');
+        
+        if (products.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        No hay productos en la base de datos
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = products.map(product => {
+            let statusBadge = '';
+            let statusText = '';
+            
+            if (product.stock === 0) {
+                statusBadge = 'bg-danger';
+                statusText = 'Agotado';
+            } else if (product.stock <= 10) {
+                statusBadge = 'bg-warning text-dark';
+                statusText = 'Stock Bajo';
+            } else {
+                statusBadge = 'bg-success';
+                statusText = 'En Stock';
+            }
+            
+            return `
+                <tr>
+                    <td>${product.id}</td>
+                    <td>${product.name}</td>
+                    <td>${product.category || 'Sin categoría'}</td>
+                    <td>$${product.price.toFixed(2)}</td>
+                    <td>${product.stock}</td>
+                    <td>
+                        <span class="badge ${statusBadge}">${statusText}</span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+});
+</script>
+{% endblock %}
