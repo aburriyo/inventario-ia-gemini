@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            {{ form.username(class="form-control") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control") }}
+                        </div>
+                        
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">¿No tienes una cuenta?</p>
+                        <a href="{{ url_for('register') }}" class="btn btn-link">
+                            Registrarse aquí
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Información del demo -->
+            <div class="alert alert-info mt-4">
+                <h6><i class="fas fa-info-circle"></i> Demo</h6>
+                <p class="mb-0">
+                    Esta es una aplicación de demostración. Puedes crear una cuenta nueva o usar las credenciales de prueba si están disponibles.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
